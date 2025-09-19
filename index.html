@@ -3,118 +3,90 @@
 <head>
   <meta charset="UTF-8">
   <title>BAND-MAID Tweets</title>
+  <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
   <style>
-    body { font-family: sans-serif; background: #2C2F33; color: #fff; margin: 0; }
-    header { background: #23272A; padding: 1em; position: sticky; top: 0; z-index: 10; }
-    input, select, button {
-      font-size: 1em; padding: 0.3em; margin-right: 0.5em;
-    }
-    #tweets { max-width: 800px; margin: auto; padding: 1em; }
-    .tweet { background: #36393F; padding: 0.8em; border-radius: 8px; margin-bottom: 1em; }
-    .meta { font-size: 0.85em; color: #aaa; margin-bottom: 0.3em; }
-    .highlight { background: yellow; color: black; }
+    body { font-family: sans-serif; margin: 20px; }
+    .tweet { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    .meta { font-size: 0.9em; color: #666; }
+    #search { width: 100%; padding: 8px; margin-bottom: 15px; }
+    #results { margin-top: 10px; }
+    #loadMore { display: block; margin: 20px auto; padding: 10px 20px; }
   </style>
 </head>
 <body>
-<header>
-  <input id="searchBox" type="text" placeholder="Search tweets...">
-  <button id="toggleSort">Sort: Newest → Oldest</button>
-  <select id="yearSelect"><option value="">Jump to year…</option></select>
-</header>
+  <h1>BAND-MAID Tweets Archive</h1>
+  <input type="text" id="search" placeholder="Search tweets...">
+  <div id="results"></div>
+  <button id="loadMore">Load More</button>
 
-<div id="tweets"></div>
-<button id="loadMore" style="display:none; margin: 1em auto; padding: 0.5em;">Load more</button>
+  <script>
+    let tweets = [];
+    let miniSearch;
+    let renderedCount = 0;
+    const batchSize = 200;
+    let currentList = [];
 
-<script src="https://unpkg.com/minisearch/dist/umd/index.min.js"></script>
-<script>
-let tweets = [];
-let miniSearch;
-let results = [];
-let sortDescending = true;
-let batchSize = 100;
-let currentIndex = 0;
+    async function loadTweets() {
+      const res = await fetch("tweets.json");
+      tweets = await res.json();
 
-async function loadData() {
-  const res = await fetch('tweets.json');
-  tweets = await res.json();
+      // Chronological by GMT
+      tweets.sort((a, b) => new Date(a.dateGMT) - new Date(b.dateGMT));
 
-  // Ensure proper Date objects
-  tweets.forEach(t => t.dateObj = new Date(t.date));
+      miniSearch = new MiniSearch({
+        fields: ['jp', 'en', 'member'], 
+        storeFields: ['id', 'dateJST', 'dateGMT', 'member', 'jp', 'en']
+      });
 
-  // Build year dropdown
-  let years = [...new Set(tweets.map(t => t.dateObj.getFullYear()))].sort((a,b) => b-a);
-  let yearSelect = document.getElementById('yearSelect');
-  years.forEach(y => {
-    let opt = document.createElement('option');
-    opt.value = y;
-    opt.textContent = y;
-    yearSelect.appendChild(opt);
-  });
+      miniSearch.addAll(tweets);
+      currentList = tweets;
+      renderNextBatch();
+    }
 
-  // Build search index
-  miniSearch = new MiniSearch({
-    fields: ['text', 'member'], // searchable
-    storeFields: ['id', 'text', 'member', 'date'] // retrievable
-  });
-  miniSearch.addAll(tweets);
+    function renderNextBatch() {
+      const container = document.getElementById('results');
+      const slice = currentList.slice(renderedCount, renderedCount + batchSize);
 
-  // Initial load
-  results = tweets.slice().sort(sortFn);
-  renderBatch();
-}
+      for (const t of slice) {
+        const div = document.createElement("div");
+        div.className = "tweet";
+        div.innerHTML = `
+          <div class="meta"><b>${t.member}</b> | ${t.dateJST}</div>
+          <div class="jp">${t.jp}</div>
+          <div class="en">${t.en}</div>
+        `;
+        container.appendChild(div);
+      }
 
-function sortFn(a, b) {
-  return sortDescending ? b.dateObj - a.dateObj : a.dateObj - b.dateObj;
-}
+      renderedCount += slice.length;
+      toggleLoadMore();
+    }
 
-function renderBatch(reset=false) {
-  let container = document.getElementById('tweets');
-  let loadMore = document.getElementById('loadMore');
-  if (reset) {
-    container.innerHTML = '';
-    currentIndex = 0;
-  }
-  let slice = results.slice(currentIndex, currentIndex + batchSize);
-  slice.forEach(t => {
-    let div = document.createElement('div');
-    div.className = 'tweet';
-    div.innerHTML = `
-      <div class="meta">${t.member} — ${new Date(t.date).toISOString().slice(0,16).replace('T',' ')}</div>
-      <div class="text">${t.text}</div>
-    `;
-    container.appendChild(div);
-  });
-  currentIndex += slice.length;
-  loadMore.style.display = (currentIndex < results.length) ? 'block' : 'none';
-}
+    function resetRender(list) {
+      document.getElementById('results').innerHTML = "";
+      renderedCount = 0;
+      currentList = list;
+      renderNextBatch();
+    }
 
-function doSearch(q) {
-  if (!q) {
-    results = tweets.slice().sort(sortFn);
-  } else {
-    let hits = miniSearch.search(q, { prefix: true, fuzzy: 0.2 });
-    results = hits.map(h => tweets.find(t => t.id == h.id));
-    results.sort(sortFn);
-  }
-  renderBatch(true);
-}
+    function toggleLoadMore() {
+      const btn = document.getElementById('loadMore');
+      btn.style.display = (renderedCount < currentList.length) ? "block" : "none";
+    }
 
-document.getElementById('searchBox').addEventListener('input', e => doSearch(e.target.value));
-document.getElementById('toggleSort').addEventListener('click', e => {
-  sortDescending = !sortDescending;
-  e.target.textContent = sortDescending ? 'Sort: Newest → Oldest' : 'Sort: Oldest → Newest';
-  results.sort(sortFn);
-  renderBatch(true);
-});
-document.getElementById('yearSelect').addEventListener('change', e => {
-  let year = e.target.value;
-  if (!year) return;
-  results = tweets.filter(t => t.dateObj.getFullYear() == year).sort(sortFn);
-  renderBatch(true);
-});
-document.getElementById('loadMore').addEventListener('click', () => renderBatch());
+    document.getElementById('search').addEventListener('input', e => {
+      const query = e.target.value.trim();
+      if (!query) {
+        resetRender(tweets);
+      } else {
+        const results = miniSearch.search(query);
+        resetRender(results.map(r => r));
+      }
+    });
 
-loadData();
-</script>
+    document.getElementById('loadMore').addEventListener('click', renderNextBatch);
+
+    loadTweets();
+  </script>
 </body>
 </html>
