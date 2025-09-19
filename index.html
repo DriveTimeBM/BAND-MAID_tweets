@@ -51,7 +51,10 @@
         const div = document.createElement("div");
         div.className = "tweet";
         div.innerHTML = `
-          <div class="meta"><b>${t.member}</b> | ${t.dateJST}</div>
+          <div class="meta">
+             <b>${t.member}</b> | 
+             <a href="${t.url}" target="_blank">${t.dateJST}</a>
+          </div>
           <div class="jp">${t.jp}</div>
           <div class="en">${t.en}</div>
         `;
