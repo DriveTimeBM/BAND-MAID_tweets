@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BAND-MAID Tweets</title>
+  <style>
+    body { font-family: sans-serif; background: #2C2F33; color: #fff; margin: 0; }
+    header { background: #23272A; padding: 1em; position: sticky; top: 0; z-index: 10; }
+    input, select, button {
+      font-size: 1em; padding: 0.3em; margin-right: 0.5em;
+    }
+    #tweets { max-width: 800px; margin: auto; padding: 1em; }
+    .tweet { background: #36393F; padding: 0.8em; border-radius: 8px; margin-bottom: 1em; }
+    .meta { font-size: 0.85em; color: #aaa; margin-bottom: 0.3em; }
+    .highlight { background: yellow; color: black; }
+  </style>
+</head>
+<body>
+<header>
+  <input id="searchBox" type="text" placeholder="Search tweets...">
+  <button id="toggleSort">Sort: Newest → Oldest</button>
+  <select id="yearSelect"><option value="">Jump to year…</option></select>
+</header>
+
+<div id="tweets"></div>
+<button id="loadMore" style="display:none; margin: 1em auto; padding: 0.5em;">Load more</button>
+
+<script src="https://unpkg.com/minisearch/dist/umd/index.min.js"></script>
+<script>
+let tweets = [];
+let miniSearch;
+let results = [];
+let sortDescending = true;
+let batchSize = 100;
+let currentIndex = 0;
+
+async function loadData() {
+  const res = await fetch('tweets.json');
+  tweets = await res.json();
+
+  // Ensure proper Date objects
+  tweets.forEach(t => t.dateObj = new Date(t.date));
+
+  // Build year dropdown
+  let years = [...new Set(tweets.map(t => t.dateObj.getFullYear()))].sort((a,b) => b-a);
+  let yearSelect = document.getElementById('yearSelect');
+  years.forEach(y => {
+    let opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    yearSelect.appendChild(opt);
+  });
+
+  // Build search index
+  miniSearch = new MiniSearch({
+    fields: ['text', 'member'], // searchable
+    storeFields: ['id', 'text', 'member', 'date'] // retrievable
+  });
+  miniSearch.addAll(tweets);
+
+  // Initial load
+  results = tweets.slice().sort(sortFn);
+  renderBatch();
+}
+
+function sortFn(a, b) {
+  return sortDescending ? b.dateObj - a.dateObj : a.dateObj - b.dateObj;
+}
+
+function renderBatch(reset=false) {
+  let container = document.getElementById('tweets');
+  let loadMore = document.getElementById('loadMore');
+  if (reset) {
+    container.innerHTML = '';
+    currentIndex = 0;
+  }
+  let slice = results.slice(currentIndex, currentIndex + batchSize);
+  slice.forEach(t => {
+    let div = document.createElement('div');
+    div.className = 'tweet';
+    div.innerHTML = `
+      <div class="meta">${t.member} — ${new Date(t.date).toISOString().slice(0,16).replace('T',' ')}</div>
+      <div class="text">${t.text}</div>
+    `;
+    container.appendChild(div);
+  });
+  currentIndex += slice.length;
+  loadMore.style.display = (currentIndex < results.length) ? 'block' : 'none';
+}
+
+function doSearch(q) {
+  if (!q) {
+    results = tweets.slice().sort(sortFn);
+  } else {
+    let hits = miniSearch.search(q, { prefix: true, fuzzy: 0.2 });
+    results = hits.map(h => tweets.find(t => t.id == h.id));
+    results.sort(sortFn);
+  }
+  renderBatch(true);
+}
+
+document.getElementById('searchBox').addEventListener('input', e => doSearch(e.target.value));
+document.getElementById('toggleSort').addEventListener('click', e => {
+  sortDescending = !sortDescending;
+  e.target.textContent = sortDescending ? 'Sort: Newest → Oldest' : 'Sort: Oldest → Newest';
+  results.sort(sortFn);
+  renderBatch(true);
+});
+document.getElementById('yearSelect').addEventListener('change', e => {
+  let year = e.target.value;
+  if (!year) return;
+  results = tweets.filter(t => t.dateObj.getFullYear() == year).sort(sortFn);
+  renderBatch(true);
+});
+document.getElementById('loadMore').addEventListener('click', () => renderBatch());
+
+loadData();
+</script>
+</body>
+</html>
