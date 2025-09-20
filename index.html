@@ -35,7 +35,7 @@
 
       miniSearch = new MiniSearch({
         fields: ['jp', 'en', 'member'], 
-        storeFields: ['id', 'dateJST', 'member', 'jp', 'en']
+        storeFields: ['id', 'dateJST', 'member', 'jp', 'en','url']
       });
 
       miniSearch.addAll(tweets);
@@ -55,7 +55,7 @@
                   <a href="${t.url}" target="_blank">${t.dateJST}</a>
           </div>
           <div class="jp">${t.jp}</div>
-          <div class="en">${t.en}</div>
+          <div class="en"><b>${t.en}</b></div>
         `;
         container.appendChild(div);
       }
