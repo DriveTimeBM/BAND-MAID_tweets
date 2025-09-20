@@ -4,81 +4,119 @@
   <meta charset="UTF-8">
   <title>BAND-MAID Tweets</title>
   <style>
-    body { font-family: sans-serif; background: #2C2F33; color: #EEE; margin: 20px; }
-    h1 { color: #F5C518; }
-    #search { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 20px; }
-    .tweet { border-bottom: 1px solid #444; padding: 10px 0; }
-    .meta { font-size: 12px; color: #AAA; }
-    .meta a { color: #1DA1F2; text-decoration: none; }
-    .meta a:hover { text-decoration: underline; }
-    .jp { margin-top: 5px; font-weight: bold; }
-    .en { margin-top: 5px; }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 10px;
+    }
+    .tweet {
+      border-bottom: 1px solid #ccc;
+      padding: 10px 0;
+    }
+    .meta {
+      font-size: 0.9em;
+      color: #555;
+    }
+    .tweet-text {
+      margin: 5px 0;
+    }
+    #search {
+      width: 100%;
+      padding: 8px;
+      font-size: 1em;
+      margin-bottom: 15px;
+    }
+    #loadMore {
+      display: block;
+      margin: 20px auto;
+      padding: 10px 20px;
+      font-size: 1em;
+      cursor: pointer;
+    }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
 </head>
 <body>
   <h1>BAND-MAID Tweets</h1>
-  <input id="search" type="text" placeholder="Search tweets...">
-
+  <input type="text" id="search" placeholder="Search tweets...">
   <div id="tweets"></div>
+  <button id="loadMore">Load More</button>
 
-  <!-- MiniSearch -->
-  <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
   <script>
-    let tweets = []
-    let miniSearch
+    const BATCH_SIZE = 100;
+    let tweets = [];
+    let searchResults = null;
+    let renderIndex = 0;
 
-    // render tweets
-    function renderTweets(list) {
-      const container = document.getElementById('tweets')
-      container.innerHTML = ''
-      list.forEach(t => {
-        const div = document.createElement('div')
-        div.className = 'tweet'
+    const tweetsContainer = document.getElementById("tweets");
+    const loadMoreBtn = document.getElementById("loadMore");
+    const searchInput = document.getElementById("search");
+
+    let miniSearch = new MiniSearch({
+      fields: ['Tweet', 'English', 'Member'],
+      storeFields: ['DateTimeJST', 'DateTimeGMT', 'TweetId', 'Member', 'Tweet', 'English', 'url']
+    });
+
+    // Render one batch
+    function renderBatch() {
+      const data = searchResults || tweets;
+      const slice = data.slice(renderIndex, renderIndex + BATCH_SIZE);
+
+      slice.forEach(t => {
+        const div = document.createElement("div");
+        div.className = "tweet";
         div.innerHTML = `
           <div class="meta">
-            <a href="${t.url}" target="_blank">${t.dateJST}</a> | ${t.member}
+            <a href="${t.url}" target="_blank">${t.DateTimeJST}</a> — <b>${t.Member}</b>
           </div>
-          <div class="jp">${t.jp}</div>
-          <div class="en">${t.en}</div>
-        `
-        container.appendChild(div)
-      })
+          <div class="tweet-text"><i>${t.Tweet}</i></div>
+          <div class="tweet-text">${t.English}</div>
+        `;
+        tweetsContainer.appendChild(div);
+      });
+
+      renderIndex += slice.length;
+      if (renderIndex >= data.length) {
+        loadMoreBtn.style.display = "none";
+      } else {
+        loadMoreBtn.style.display = "block";
+      }
     }
 
-    // initialize search
-    function initSearch() {
-      miniSearch = new MiniSearch({
-        fields: ['jp', 'en', 'member'],       // searchable fields
-        storeFields: ['id', 'dateJST', 'member', 'jp', 'en', 'url']
-      })
-      miniSearch.addAll(tweets)
-
-      document.getElementById('search').addEventListener('input', e => {
-        const query = e.target.value.trim()
-        if (!query) {
-          renderTweets(tweets)
-        } else {
-          const results = miniSearch.search(query).map(r => ({
-            id: r.id,
-            dateJST: r.dateJST,
-            member: r.member,
-            jp: r.jp,
-            en: r.en,
-            url: r.url
-          }))
-          renderTweets(results)
-        }
-      })
+    // Reset and show first batch
+    function resetAndRender(data) {
+      tweetsContainer.innerHTML = "";
+      renderIndex = 0;
+      searchResults = data;
+      renderBatch();
     }
 
-    // load tweets.json
-    fetch('tweets.json')
+    // Event: search
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.trim();
+      if (q === "") {
+        searchResults = null;
+        resetAndRender(tweets);
+      } else {
+        let results = miniSearch.search(q, { prefix: true, fuzzy: 0.2 });
+        results = results.map(r => r);
+        resetAndRender(results);
+      }
+    });
+
+    loadMoreBtn.addEventListener("click", () => {
+      renderBatch();
+    });
+
+    // Load tweets.json
+    fetch("tweets.json")
       .then(r => r.json())
       .then(data => {
-        tweets = data
-        renderTweets(tweets)
-        initSearch()
-      })
+        tweets = data;
+        miniSearch.addAll(tweets);
+        resetAndRender(tweets);
+      });
   </script>
 </body>
 </html>
