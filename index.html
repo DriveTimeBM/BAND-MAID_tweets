@@ -1,84 +1,71 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>BAND-MAID Tweets</title>
-  <style>
-    body { font-family: sans-serif; background: #2C2F33; color: #EEE; margin: 20px; }
-    h1 { color: #F5C518; }
-    #search { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 20px; }
-    .tweet { border-bottom: 1px solid #444; padding: 10px 0; }
-    .meta { font-size: 12px; color: #AAA; }
-    .meta a { color: #1DA1F2; text-decoration: none; }
-    .meta a:hover { text-decoration: underline; }
-    .jp { margin-top: 5px; font-weight: bold; }
-    .en { margin-top: 5px; }
-  </style>
-</head>
-<body>
-  <h1>BAND-MAID Tweets</h1>
-  <input id="search" type="text" placeholder="Search tweets...">
+<script>
+  let tweets = [];
+  let miniSearch;
+  let renderedCount = 0;
+  const batchSize = 200;
+  let currentList = [];
 
-  <div id="tweets"></div>
+  async function loadTweets() {
+    const res = await fetch("tweets.json");
+    tweets = await res.json();
 
-  <!-- MiniSearch -->
-  <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
-  <script>
-    let tweets = []
-    let miniSearch
+    // Chronological by GMT
+    tweets.sort((a, b) => new Date(a.dateGMT) - new Date(b.dateGMT));
 
-    // render tweets
-    function renderTweets(list) {
-      const container = document.getElementById('tweets')
-      container.innerHTML = ''
-      list.forEach(t => {
-        const div = document.createElement('div')
-        div.className = 'tweet'
-        div.innerHTML = `
-          <div class="meta">
-            <a href="${t.url}" target="_blank">${t.dateJST}</a> | ${t.member}
-          </div>
-          <div class="jp">${t.jp}</div>
-          <div class="en">${t.en}</div>
-        `
-        container.appendChild(div)
-      })
+    miniSearch = new MiniSearch({
+      fields: ['jp', 'en', 'member'], 
+      storeFields: ['id', 'dateJST', 'dateGMT', 'member', 'jp', 'en', 'url']
+    });
+
+    miniSearch.addAll(tweets);
+    currentList = tweets;
+    renderNextBatch();
+  }
+
+  function renderNextBatch() {
+    const container = document.getElementById('results');
+    const slice = currentList.slice(renderedCount, renderedCount + batchSize);
+
+    for (const t of slice) {
+      const div = document.createElement("div");
+      div.className = "tweet";
+      div.innerHTML = `
+        <div class="meta">
+          <b>${t.member}</b> | <a href="${t.url}" target="_blank">${t.dateJST}</a>
+        </div>
+        <div class="jp">${t.jp}</div>
+        <div class="en">${t.en}</div>
+      `;
+      container.appendChild(div);
     }
 
-    // initialize search
-    function initSearch() {
-      miniSearch = new MiniSearch({
-        fields: ['jp', 'en', 'member'],       // searchable fields
-        storeFields: ['id', 'dateJST', 'member', 'jp', 'en', 'url']
-      })
-      miniSearch.addAll(tweets)
+    renderedCount += slice.length;
+    toggleLoadMore();
+  }
 
-      document.getElementById('search').addEventListener('input', e => {
-        const query = e.target.value.trim()
-        if (!query) {
-          renderTweets(tweets)
-        } else {
-          const results = miniSearch.search(query).map(r => ({
-            id: r.id,
-            dateJST: r.dateJST,
-            member: r.member,
-            jp: r.jp,
-            en: r.en,
-            url: r.url
-          }))
-          renderTweets(results)
-        }
-      })
+  function resetRender(list) {
+    document.getElementById('results').innerHTML = "";
+    renderedCount = 0;
+    currentList = list;
+    renderNextBatch();
+  }
+
+  function toggleLoadMore() {
+    const btn = document.getElementById('loadMore');
+    btn.style.display = (renderedCount < currentList.length) ? "block" : "none";
+  }
+
+  document.getElementById('search').addEventListener('input', e => {
+    const query = e.target.value.trim();
+    if (!query) {
+      resetRender(tweets);
+    } else {
+      const results = miniSearch.search(query);
+      resetRender(results.map(r => r));
     }
+  });
 
-    // load tweets.json
-    fetch('tweets.json')
-      .then(r => r.json())
-      .then(data => {
-        tweets = data
-        renderTweets(tweets)
-        initSearch()
-      })
-  </script>
-</body>
-</html>
+  document.getElementById('loadMore').addEventListener('click', renderNextBatch);
+
+  loadTweets();
+</script>
