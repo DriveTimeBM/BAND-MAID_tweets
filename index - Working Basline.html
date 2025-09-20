@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BAND-MAID Tweets</title>
+  <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    .tweet { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    .meta { font-size: 0.9em; color: #666; }
+    #search { width: 100%; padding: 8px; margin-bottom: 15px; }
+    #results { margin-top: 10px; }
+    #loadMore { display: block; margin: 20px auto; padding: 10px 20px; }
+  </style>
+</head>
+<body>
+  <h1>BAND-MAID Tweets Archive</h1>
+  <input type="text" id="search" placeholder="Search tweets...">
+  <div id="results"></div>
+  <button id="loadMore">Load More</button>
+
+  <script>
+    let tweets = [];
+    let miniSearch;
+    let renderedCount = 0;
+    const batchSize = 200;
+    let currentList = [];
+
+    async function loadTweets() {
+      const res = await fetch("tweets.json");
+      tweets = await res.json();
+
+      // Chronological by GMT
+      tweets.sort((a, b) => new Date(a.dateJST) - new Date(b.dateJST));
+
+      miniSearch = new MiniSearch({
+        fields: ['jp', 'en', 'member'], 
+        storeFields: ['id', 'dateJST', 'member', 'jp', 'en']
+      });
+
+      miniSearch.addAll(tweets);
+      currentList = tweets;
+      renderNextBatch();
+    }
+
+    function renderNextBatch() {
+      const container = document.getElementById('results');
+      const slice = currentList.slice(renderedCount, renderedCount + batchSize);
+
+      for (const t of slice) {
+        const div = document.createElement("div");
+        div.className = "tweet";
+        div.innerHTML = `
+          <div class="meta"><b>${t.member}</b> | 
+                  <a href="${t.url}" target="_blank">${t.dateJST}</a>
+          </div>
+          <div class="jp">${t.jp}</div>
+          <div class="en">${t.en}</div>
+        `;
+        container.appendChild(div);
+      }
+
+      renderedCount += slice.length;
+      toggleLoadMore();
+    }
+
+    function resetRender(list) {
+      document.getElementById('results').innerHTML = "";
+      renderedCount = 0;
+      currentList = list;
+      renderNextBatch();
+    }
+
+    function toggleLoadMore() {
+      const btn = document.getElementById('loadMore');
+      btn.style.display = (renderedCount < currentList.length) ? "block" : "none";
+    }
+
+    document.getElementById('search').addEventListener('input', e => {
+      const query = e.target.value.trim();
+      if (!query) {
+        resetRender(tweets);
+      } else {
+        const results = miniSearch.search(query);
+        resetRender(results.map(r => r));
+      }
+    });
+
+    document.getElementById('loadMore').addEventListener('click', renderNextBatch);
+
+    loadTweets();
+  </script>
+</body>
+</html>

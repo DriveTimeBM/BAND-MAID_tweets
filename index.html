@@ -81,8 +81,28 @@
       if (!query) {
         resetRender(tweets);
       } else {
-        const results = miniSearch.search(query);
-        resetRender(results.map(r => r));
+        //const results = miniSearch.search(query);
+        //resetRender(results.map(r => r));
+        document.getElementById('search').addEventListener('input', e => {
+  const query = e.target.value.trim();
+  if (!query) {
+    resetRender(tweets);
+  } else {
+    const results = miniSearch.search(query).map(r => {
+      // retrieve full stored fields
+      return {
+        id: r.id,
+        dateJST: r.dateJST,
+        member: r.member,
+        jp: r.jp,
+        en: r.en,
+        url: r.url
+      };
+    });
+    resetRender(results);
+  }
+});
+
       }
     });
 
