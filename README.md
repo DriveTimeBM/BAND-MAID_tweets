@@ -40,7 +40,7 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 ---
 
 ## Other BAND-MAID Projects
-- [BAND-MAID GIF Catalog](https://drivetimebm.github.io/BAND-MAID_gifs/BAND-MAID-GIFs.html)
+- [BAND-MAID GIF Catalog](https://github.com/DriveTimeBM/BAND-MAID_gifs)
 - [BAND-MAID Song Sorter (Ranker)](https://github.com/DriveTimeBM/BAND-MAID_song_sorter)
 
 
