@@ -1,122 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8" />
   <title>BAND-MAID Tweets</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 900px;
-      margin: 20px auto;
-      padding: 10px;
-    }
-    .tweet {
-      border-bottom: 1px solid #ccc;
-      padding: 10px 0;
-    }
-    .meta {
-      font-size: 0.9em;
-      color: #555;
-    }
-    .tweet-text {
-      margin: 5px 0;
-    }
-    #search {
-      width: 100%;
-      padding: 8px;
-      font-size: 1em;
-      margin-bottom: 15px;
-    }
-    #loadMore {
-      display: block;
-      margin: 20px auto;
-      padding: 10px 20px;
-      font-size: 1em;
-      cursor: pointer;
-    }
+    body { font-family: Arial, Helvetica, sans-serif; max-width:1000px; margin:20px auto; padding:10px; }
+    h1 { margin-top: 0; }
+    #search { width:100%; padding:8px; font-size:1rem; margin-bottom:12px; }
+    .tweet { border-bottom:1px solid #ddd; padding:10px 0; }
+    .meta { font-size:0.9rem; color:#333; margin-bottom:6px; }
+    .meta a { color:#1a73e8; text-decoration:none; }
+    .jp { font-weight:600; margin-bottom:6px; }
+    .en { color:#222; }
+    #loadMore { display:block; margin:18px auto; padding:10px 18px; font-size:1rem; cursor:pointer; }
+    #status { font-size:0.9rem; color:#666; margin-bottom:8px; }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
 </head>
 <body>
   <h1>BAND-MAID Tweets</h1>
-  <input type="text" id="search" placeholder="Search tweets...">
+  <div id="status">Loading tweets.json…</div>
+  <input id="search" type="text" placeholder="Search tweets (full text)" />
   <div id="tweets"></div>
   <button id="loadMore">Load More</button>
 
   <script>
+  (function () {
     const BATCH_SIZE = 100;
-    let tweets = [];
-    let searchResults = null;
+    const tweetsContainer = document.getElementById('tweets');
+    const loadMoreBtn = document.getElementById('loadMore');
+    const searchInput = document.getElementById('search');
+    const status = document.getElementById('status');
+
+    let allTweets = [];
+    let renderedList = [];
     let renderIndex = 0;
+    let miniSearch;
 
-    const tweetsContainer = document.getElementById("tweets");
-    const loadMoreBtn = document.getElementById("loadMore");
-    const searchInput = document.getElementById("search");
+    function escapeHtml(s) {
+      return s ? String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;') : '';
+    }
 
-    let miniSearch = new MiniSearch({
-      fields: ['Tweet', 'English', 'Member'],
-      storeFields: ['DateTimeJST', 'DateTimeGMT', 'TweetId', 'Member', 'Tweet', 'English', 'url']
-    });
-
-    // Render one batch
     function renderBatch() {
-      const data = searchResults || tweets;
-      const slice = data.slice(renderIndex, renderIndex + BATCH_SIZE);
-
+      const slice = renderedList.slice(renderIndex, renderIndex + BATCH_SIZE);
       slice.forEach(t => {
-        const div = document.createElement("div");
-        div.className = "tweet";
-        div.innerHTML = `
-          <div class="meta">
-            <a href="${t.url}" target="_blank">${t.DateTimeJST}</a> — <b>${t.Member}</b>
-          </div>
-          <div class="tweet-text"><i>${t.Tweet}</i></div>
-          <div class="tweet-text">${t.English}</div>
-        `;
-        tweetsContainer.appendChild(div);
+        const html = `
+          <div class="tweet">
+            <div class="meta">
+              <a href="${escapeHtml(t.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(t.dateJST)}</a>
+              &nbsp;—&nbsp;<strong>${escapeHtml(t.member)}</strong>
+            </div>
+            <div class="jp">${escapeHtml(t.jp)}</div>
+            <div class="en">${escapeHtml(t.en)}</div>
+          </div>`;
+        tweetsContainer.insertAdjacentHTML('beforeend', html);
       });
-
       renderIndex += slice.length;
-      if (renderIndex >= data.length) {
-        loadMoreBtn.style.display = "none";
-      } else {
-        loadMoreBtn.style.display = "block";
-      }
+      loadMoreBtn.style.display = renderIndex < renderedList.length ? 'block' : 'none';
+      status.textContent = `Showing ${Math.min(renderIndex, renderedList.length)} of ${renderedList.length} (${allTweets.length} total).`;
     }
 
-    // Reset and show first batch
-    function resetAndRender(data) {
-      tweetsContainer.innerHTML = "";
+    function resetAndRender(list) {
+      tweetsContainer.innerHTML = '';
+      renderedList = list;
       renderIndex = 0;
-      searchResults = data;
       renderBatch();
     }
 
-    // Event: search
-    searchInput.addEventListener("input", () => {
-      const q = searchInput.value.trim();
-      if (q === "") {
-        searchResults = null;
-        resetAndRender(tweets);
-      } else {
-        let results = miniSearch.search(q, { prefix: true, fuzzy: 0.2 });
-        results = results.map(r => r);
-        resetAndRender(results);
+    function doSearch(q) {
+      if (!q.trim()) {
+        resetAndRender(allTweets);
+        return;
       }
-    });
+      const results = miniSearch.search(q, { prefix: true, fuzzy: 0.2 });
+      resetAndRender(results.map(r => r));
+    }
 
-    loadMoreBtn.addEventListener("click", () => {
-      renderBatch();
-    });
-
-    // Load tweets.json
-    fetch("tweets.json")
+    fetch('tweets.json')
       .then(r => r.json())
       .then(data => {
-        tweets = data;
-        miniSearch.addAll(tweets);
-        resetAndRender(tweets);
+        allTweets = data;
+        // sort newest first
+        allTweets.sort((a,b) => new Date(b.dateGMT) - new Date(a.dateGMT));
+
+        miniSearch = new MiniSearch({
+          fields: ['jp','en','member'],
+          storeFields: ['id','dateJST','dateGMT','member','jp','en','url']
+        });
+        miniSearch.addAll(allTweets);
+
+        status.textContent = `Loaded ${allTweets.length} tweets.`;
+        resetAndRender(allTweets);
       });
+
+    loadMoreBtn.addEventListener('click', renderBatch);
+    searchInput.addEventListener('input', e => doSearch(e.target.value));
+  })();
   </script>
 </body>
 </html>
