@@ -7,6 +7,8 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 🔗 **View the archive here:**  
 [https://drivetimebm.github.io/BAND-MAID_tweets/](https://drivetimebm.github.io/BAND-MAID_tweets/)
 
+[Project Description (TBD)](https://www.reddit.com/r/BandMaid/tbd/)
+
 ---
 
 ## Features
@@ -29,7 +31,7 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 - **Data Retrival:** u/hbydzy 
 - **Translations:** u/Some-Ad3087 
 - **Japanese Assistance:** @vblooddrunk on Discord  
-- **Band:** [BAND-MAID Official](https://bandmaid.tokyo/) 
+- **Band:** [BAND-MAID Official Site](https://bandmaid.tokyo/) [BAND-MAID YouTube Channel](https://www.youtube.com/c/BANDMAID)
 - **X/Twitter Accounts:** [BAND-MAID Official](https://x.com/bandmaid/) 
 [Akane](https://x.com/achi_bandmaid/)
 [Kanami](https://x.com/kanami_bandmaid/)
