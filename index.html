@@ -2,111 +2,83 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>BAND-MAID Tweets Archive</title>
+  <title>BAND-MAID Tweets</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    #search { width: 300px; padding: 5px; }
-    .tweet { border-bottom: 1px solid #ccc; padding: 10px 0; }
-    .tweet-time { font-weight: bold; }
-    .member { color: #555; }
-    .jp { margin-top: 5px; }
-    .en { margin-top: 5px; color: #333; }
-    #loadMore { margin: 20px 0; padding: 10px 20px; cursor: pointer; }
-    #toggleSort { margin-left: 10px; padding: 5px 10px; cursor: pointer; }
+    body { font-family: sans-serif; background: #2C2F33; color: #EEE; margin: 20px; }
+    h1 { color: #F5C518; }
+    #search { width: 100%; padding: 10px; font-size: 16px; margin-bottom: 20px; }
+    .tweet { border-bottom: 1px solid #444; padding: 10px 0; }
+    .meta { font-size: 12px; color: #AAA; }
+    .meta a { color: #1DA1F2; text-decoration: none; }
+    .meta a:hover { text-decoration: underline; }
+    .jp { margin-top: 5px; font-weight: bold; }
+    .en { margin-top: 5px; }
   </style>
 </head>
 <body>
-  <h1>BAND-MAID Tweets Archive</h1>
-  <input type="text" id="search" placeholder="Search tweets...">
-  <button id="toggleSort">Sort: Old → New</button>
+  <h1>BAND-MAID Tweets</h1>
+  <input id="search" type="text" placeholder="Search tweets...">
+
   <div id="tweets"></div>
-  <button id="loadMore">Load More</button>
 
-  <script src="https://unpkg.com/minisearch/dist/umd/index.min.js"></script>
+  <!-- MiniSearch -->
+  <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
   <script>
-    let tweets = [];
-    let minisearch;
-    let results = [];
-    let displayIndex = 0;
-    const BATCH_SIZE = 50;
-    let sortAsc = true; // default: old → new
+    let tweets = []
+    let miniSearch
 
-    async function loadData() {
-      const response = await fetch('tweets.json');
-      tweets = await response.json();
-
-      minisearch = new MiniSearch({
-        fields: ['jp', 'en', 'member'],
-        storeFields: ['id', 'dateJST', 'member', 'jp', 'en', 'url']
-      });
-
-      minisearch.addAll(tweets);
-
-      sortTweets();
-      results = tweets;
-      renderBatch();
-    }
-
-    function sortTweets() {
-      results.sort((a, b) => {
-        const da = new Date(a.dateJST.replace(' ', 'T'));
-        const db = new Date(b.dateJST.replace(' ', 'T'));
-        return sortAsc ? da - db : db - da;
-      });
-    }
-
-    function renderBatch() {
-      const container = document.getElementById('tweets');
-      const slice = results.slice(displayIndex, displayIndex + BATCH_SIZE);
-
-      slice.forEach(tweet => {
-        const div = document.createElement('div');
-        div.className = 'tweet';
+    // render tweets
+    function renderTweets(list) {
+      const container = document.getElementById('tweets')
+      container.innerHTML = ''
+      list.forEach(t => {
+        const div = document.createElement('div')
+        div.className = 'tweet'
         div.innerHTML = `
-          <div class="tweet-time"><a href="${tweet.url}" target="_blank">${tweet.dateJST}</a></div>
-          <div class="member">${tweet.member}</div>
-          <div class="jp">${tweet.jp}</div>
-          <div class="en">${tweet.en}</div>
-        `;
-        container.appendChild(div);
-      });
-
-      displayIndex += slice.length;
-
-      if (displayIndex >= results.length) {
-        document.getElementById('loadMore').style.display = 'none';
-      } else {
-        document.getElementById('loadMore').style.display = 'block';
-      }
+          <div class="meta">
+            <a href="${t.url}" target="_blank">${t.dateJST}</a> | ${t.member}
+          </div>
+          <div class="jp">${t.jp}</div>
+          <div class="en">${t.en}</div>
+        `
+        container.appendChild(div)
+      })
     }
 
-    function resetAndRender(newResults) {
-      results = newResults;
-      sortTweets();
-      displayIndex = 0;
-      document.getElementById('tweets').innerHTML = '';
-      renderBatch();
+    // initialize search
+    function initSearch() {
+      miniSearch = new MiniSearch({
+        fields: ['jp', 'en', 'member'],       // searchable fields
+        storeFields: ['id', 'dateJST', 'member', 'jp', 'en', 'url']
+      })
+      miniSearch.addAll(tweets)
+
+      document.getElementById('search').addEventListener('input', e => {
+        const query = e.target.value.trim()
+        if (!query) {
+          renderTweets(tweets)
+        } else {
+          const results = miniSearch.search(query).map(r => ({
+            id: r.id,
+            dateJST: r.dateJST,
+            member: r.member,
+            jp: r.jp,
+            en: r.en,
+            url: r.url
+          }))
+          renderTweets(results)
+        }
+      })
     }
 
-    document.getElementById('search').addEventListener('input', e => {
-      const query = e.target.value.trim();
-      if (query === '') {
-        resetAndRender(tweets);
-      } else {
-        const searchResults = minisearch.search(query, { prefix: true });
-        resetAndRender(searchResults.map(r => r));
-      }
-    });
-
-    document.getElementById('loadMore').addEventListener('click', renderBatch);
-
-    document.getElementById('toggleSort').addEventListener('click', () => {
-      sortAsc = !sortAsc;
-      document.getElementById('toggleSort').innerText = sortAsc ? 'Sort: Old → New' : 'Sort: New → Old';
-      resetAndRender(results);
-    });
-
-    loadData();
+    // load tweets.json
+    fetch('tweets.json')
+      .then(r => r.json())
+      .then(data => {
+        tweets = data
+        renderTweets(tweets)
+        initSearch()
+      })
   </script>
 </body>
 </html>
