@@ -10,11 +10,11 @@
     tweets = await res.json();
 
     // Chronological by GMT
-    tweets.sort((a, b) => new Date(a.dateGMT) - new Date(b.dateGMT));
+    tweets.sort((a, b) => new Date(a.dateJST) - new Date(b.dateJST));
 
     miniSearch = new MiniSearch({
       fields: ['jp', 'en', 'member'], 
-      storeFields: ['id', 'dateJST', 'dateGMT', 'member', 'jp', 'en', 'url']
+      storeFields: ['id', 'dateJST', 'member', 'jp', 'en', 'url']
     });
 
     miniSearch.addAll(tweets);
