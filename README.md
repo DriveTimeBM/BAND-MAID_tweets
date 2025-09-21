@@ -28,7 +28,7 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 ---
 
 ## Credits
-- **Data Retrival:** u/hbydzy 
+- **Data Retreival:** u/hbydzy 
 - **Translations:** u/Some-Ad3087 
 - **Japanese Assistance:** @vblooddrunk on Discord  
 - **Band:** [BAND-MAID Official Site](https://bandmaid.tokyo/) [BAND-MAID YouTube Channel](https://www.youtube.com/c/BANDMAID)
