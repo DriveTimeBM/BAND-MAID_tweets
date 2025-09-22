@@ -2,7 +2,7 @@
 
 <img src="favicon.png" alt="Logo" width="128" height="128">
 
-This project contains a 12-year archive of **translated BAND-MAID tweets** (over 52,000 entries) from all six accounts, presented in a searchable, chronological web page.
+This project contains a 12-year archive of **translated BAND-MAID tweets** (over 52,000 entries) from all six accounts, presented in a searchable, chronological web page. Note: the five members shared the same account up and until 2013-10-25T02:35:41. The tweets before then were not necessarily from Miku. The member is usually indicated.
 
 🔗 **View the archive here:**  
 [https://drivetimebm.github.io/BAND-MAID_tweets/](https://drivetimebm.github.io/BAND-MAID_tweets/)
