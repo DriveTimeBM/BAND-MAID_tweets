@@ -7,7 +7,7 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 🔗 **View the archive here:**  
 [https://drivetimebm.github.io/BAND-MAID_tweets/](https://drivetimebm.github.io/BAND-MAID_tweets/)
 
-[Project Description (TBD)](https://www.reddit.com/r/BandMaid/tbd/)
+[Project Description](https://www.reddit.com/r/BandMaid/comments/1nn2aof/bandmaid_translated_tweet_archive_20132025/)
 
 ---
 
@@ -23,7 +23,7 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 - Built as a static site (pure HTML/JS/CSS).
 - Search powered by [MiniSearch](https://lucaong.github.io/minisearch/).
 - Hosted via **GitHub Pages**.
-- Translators used OpenAI API (gpt-4o-mini), Google Translation API, and Grok
+- Translators used OpenAI API (gpt-4o-mini)
 
 ---
 
