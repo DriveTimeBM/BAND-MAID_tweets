@@ -12,6 +12,7 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 ---
 
 ## Features
+
 - Chronological browsing of tweets (oldest → newest).
 - Searchable full-text index (English and Japanese).
 - Displays both Japanese original and English translation.
@@ -20,6 +21,7 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 ---
 
 ## Technical Notes
+
 - Built as a static site (pure HTML/JS/CSS).
 - Search powered by [MiniSearch](https://lucaong.github.io/minisearch/).
 - Hosted via **GitHub Pages**.
@@ -28,6 +30,7 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 ---
 
 ## Credits
+
 - **Data Retreival:** u/hbydzy 
 - **Translations:** u/Some-Ad3087 
 - **Japanese Assistance:** @vblooddrunk on Discord  
@@ -42,9 +45,12 @@ This project contains a 12-year archive of **translated BAND-MAID tweets** (over
 ---
 
 ## All BAND-MAID Projects
+
 - [BAND-MAID X/Twitter Archive](https://github.com/DriveTimeBM/BAND-MAID_tweets)
 - [BAND-MAID Song Sorter (Ranker)](https://github.com/DriveTimeBM/BAND-MAID_song_sorter)
 - [BAND-MAID GIF Catalog](https://github.com/DriveTimeBM/BAND-MAID_gifs)
 - [BAND-MAID Reports](https://github.com/DriveTimeBM/BAND-MAID_reports)
-
-
+- [BAND-MAID Instagram Archive](https://github.com/DriveTimeBM/BAND-MAID_instagram)
+- [BAND-MAID Instagram Archive](https://github.com/DriveTimeBM/BAND-MAID_gpt)
+- [BAND-MAID Instagram Archive](https://github.com/DriveTimeBM/BAND-MAID_prime)
+- [BAND-MAID Instagram Archive](https://github.com/DriveTimeBM/BAND-MAID_creations)
