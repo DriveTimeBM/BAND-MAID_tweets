@@ -1,56 +1,71 @@
-# BAND-MAID Tweets Archive
+# BAND-MAID Tweet Archive
 
-<img src="favicon.png" alt="Logo" width="128" height="128">
+A searchable archive of translated BAND-MAID tweets, hosted on GitHub Pages.
 
-This project contains a 12-year archive of **translated BAND-MAID tweets** (over 52,000 entries) from all six accounts, presented in a searchable, chronological web page. Note: the five members shared the same account up and until 2013-10-25T02:35:41. The tweets before then were not necessarily from Miku. The member is usually indicated.
+## Overview
+
+This archive contains approximately 52,000 tweets from BAND-MAID and its five members, spanning from 2013 to present. All tweets include the original Japanese text alongside an English translation.
 
 🔗 **View the archive here:**  
 [https://drivetimebm.github.io/BAND-MAID_tweets/](https://drivetimebm.github.io/BAND-MAID_tweets/)
 
 [Project Description](https://www.reddit.com/r/BandMaid/comments/1nn2aof/bandmaid_translated_tweet_archive_20132025/)
 
----
-
 ## Features
 
-- Chronological browsing of tweets (oldest → newest).
-- Searchable full-text index (English and Japanese).
-- Displays both Japanese original and English translation.
-- Clickable timestamps link directly to the original tweets on X/Twitter.
+- Full-text search across English translations and original Japanese text
+- Filter by member (BAND-MAID, Saiki, Miku, Kanami, Akane, MISA)
+- Date range filtering
+- Links to original tweets on X (Twitter)
+- Virtual scrolling for smooth performance across the full dataset
 
----
+## Files
 
-## Technical Notes
+| File | Description |
+|---|---|
+| `index.html` | Self-contained search interface |
+| `tweets.json` | Archive data (~22 MB) |
+| `favicon.png` | Site favicon |
 
-- Built as a static site (pure HTML/JS/CSS).
-- Search powered by [MiniSearch](https://lucaong.github.io/minisearch/).
-- Hosted via **GitHub Pages**.
-- Translators used OpenAI API (gpt-4o-mini)
+## Data Format
 
----
+```json
+[
+  {
+    "id": 1,
+    "dateJST": "2013-07-19T13:58:37",
+    "member": "BAND-MAID",
+    "jp": "～Twitter始めます～",
+    "en": "I'm starting Twitter!",
+    "url": "https://x.com/bandmaid/status/358088464937390080"
+  }
+]
+```
 
-## Credits
+| Field | Description |
+|---|---|
+| `id` | Sequential record ID |
+| `dateJST` | Tweet datetime in Japan Standard Time (ISO 8601) |
+| `member` | Posting member: `BAND-MAID`, `Saiki`, `Miku`, `Kanami`, `Akane`, or `MISA` |
+| `jp` | Original Japanese tweet text |
+| `en` | English translation |
+| `url` | Link to the original post on X |
 
-- **Data Retreival:** u/hbydzy 
-- **Translations:** u/Some-Ad3087 
-- **Japanese Assistance:** @vblooddrunk on Discord  
-- **Band:** [BAND-MAID Official Site](https://bandmaid.tokyo/) [BAND-MAID YouTube Channel](https://www.youtube.com/c/BANDMAID)
-- **X/Twitter Accounts:** [BAND-MAID Official](https://x.com/bandmaid/) 
-[Akane](https://x.com/achi_bandmaid/)
-[Kanami](https://x.com/kanami_bandmaid/)
-[KobatoMiku](https://x.com/miku_bandmaid/)
-[MISA](https://x.com/misa_bandmaid/)
-[Saiki](https://x.com/saiki_bandmaid/)
+## Members
 
----
+| Member | Color |
+|---|---|
+| BAND-MAID | White |
+| Saiki | Blue |
+| Miku | Pink |
+| Kanami | Green |
+| Akane | Gold |
+| MISA | Purple |
 
-## All BAND-MAID Projects
+## Performance Notes
 
-- [BAND-MAID X/Twitter Archive](https://github.com/DriveTimeBM/BAND-MAID_tweets)
-- [BAND-MAID Song Sorter (Ranker)](https://github.com/DriveTimeBM/BAND-MAID_song_sorter)
-- [BAND-MAID GIF Catalog](https://github.com/DriveTimeBM/BAND-MAID_gifs)
-- [BAND-MAID Reports](https://github.com/DriveTimeBM/BAND-MAID_reports)
-- [BAND-MAID Instagram Archive](https://github.com/DriveTimeBM/BAND-MAID_instagram)
-- [BAND-MAID GPT](https://github.com/DriveTimeBM/BAND-MAID_gpt)
-- [BAND-MAID Prime Metadata](https://github.com/DriveTimeBM/BAND-MAID_prime)
-- [BAND-MAID Creations](https://github.com/DriveTimeBM/BAND-MAID_creations)
+The full dataset is approximately 22 MB. The archive page streams and parses `tweets.json` client-side on first load, displaying a progress indicator while fetching. Once loaded, all filtering and search runs locally in-memory with no additional network requests.
+
+## Related
+
+- [BAND-MAID Instagram Archive](https://github.com/drivetimebm/BAND-MAID_instagram)
